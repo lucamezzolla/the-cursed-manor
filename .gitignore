@@ -1,0 +1,23 @@
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*~
+
+# Local development
+node_modules/
+.env
+.env.*
+
+# Archives generated for releases
+*.zip

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#090b11" name="theme-color"/>
+<title>The Cursed Manor — Demo v1.23</title>
+<link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+<audio id="ambientAudio" preload="metadata"></audio>
+<section aria-label="Schermata iniziale" class="start-screen" id="startScreen">
+<div class="start-screen-bg"></div>
+<div class="start-screen-shade"></div>
+<div class="start-card">
+<p class="eyebrow" data-i18n="gameTitle">IL MANIERO MALEDETTO</p>
+<h2 id="startTitle">Le dodici campane stanno per suonare.</h2>
+<p id="startCopy">Tre Sigilli sono dispersi nel maniero. Entra nel maniero, attraversa le stanze e sigilla la Cripta. Se arriverà il dodicesimo rintocco, la caccia continuerà con il Teschio libero tra le stanze.</p>
+<div class="start-language-field start-language-select-only"><select aria-label="Language / Lingua" id="languageSelect"><option value="it">🇮🇹 Italiano</option><option value="en">🇬🇧 English</option><option value="es">🇪🇸 Español</option><option value="fr">🇫🇷 Français</option><option value="pt">🇧🇷 Português</option></select></div>
+<button class="primary start-game-btn" id="startGameBtn">⚰️ Inizia partita</button>
+<span class="start-note" id="startNote">Prologo → nome e avatar → difficoltà → la partita comincia e parte la musica.</span>
+</div>
+</section>
+<div class="app-shell">
+<header class="topbar">
+<div>
+<p class="eyebrow" id="versionLabel">DEMO OFFLINE · VERSIONE 1.23</p>
+<h1 data-i18n="gameTitle">Il Maniero Maledetto</h1>
+<p class="subtitle" data-i18n="subtitle">Esplora il maniero, sopravvivi alle trappole e sigilla la Cripta anche se il Teschio si risveglia.</p>
+</div>
+<div class="top-actions">
+<button class="ghost" id="storyBtn">📜 Trama</button>
+<button class="ghost" id="pathBtn">🗺️ Percorso</button>
+<button class="ghost" disabled="" id="roomBtn">🏰 Stanza</button>
+<select aria-label="Lingua" class="top-language-select" id="languageSelectTop"><option value="it">🇮🇹 IT</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option><option value="fr">🇫🇷 FR</option><option value="pt">🇧🇷 PT</option></select>
+<button class="ghost" id="soundBtn">🎵 ON</button>
+<button class="danger" id="newGameBtn">↻ Nuova partita</button>
+</div>
+</header>
+<main class="layout dashboard-layout">
+<aside class="panel left-panel">
+<section>
+<div class="section-head">
+<h2 data-i18n="explorers">Esploratori</h2>
+<span class="tiny-note" data-i18n="dashboardPlayersNote">1 giocatore + 3 rivali</span>
+</div>
+<div class="players-list" id="playersList"></div>
+</section>
+<section class="objective-card">
+<h2 data-i18n="sealsTitle">Sigilli</h2>
+<p data-i18n="sealsCopy">Corvo, Luna e Spina devono arrivare insieme nella Cripta. Il rito finale riduce la vita del Teschio a zero.</p>
+<div class="sigils" id="sigils"></div>
+</section>
+<section>
+<div class="section-head"><h2 data-i18n="sharedInventory">Inventario condiviso</h2><span class="tiny-note" data-i18n="usableItems">oggetti utilizzabili</span></div>
+<p class="inventory-help" data-i18n="inventoryHelp">Gli oggetti trovati da qualsiasi esploratore finiscono qui. Puoi usarne uno all’inizio di ogni tuo turno: alcuni aiutano te, altri ostacolano i rivali.</p>
+<div class="inventory active-inventory" id="inventory"></div>
+</section>
+</aside>
+<section class="center-column">
+<div class="panel mission-panel">
+<div class="mission-image">
+<img alt="La Cripta" src="assets/rooms/cripta.jpg"/>
+<div class="mission-image-shade"></div>
+<div class="mission-image-copy">
+<p class="eyebrow" data-i18n="mission">MISSIONE</p>
+<h2 data-i18n="missionTitle">Sigilla la Cripta e riduci il Teschio a un osso comune.</h2>
+<p id="missionSummaryCopy">Durante la partita questa pagina è solo un riepilogo: il gioco vero avviene nella Stanza. Minimizzala quando vuoi consultare il diario completo.</p>
+</div>
+</div>
+<div class="doom-main compact-doom">
+<div class="doom-copy">
+<div>
+<p class="small-label" data-i18n="skullAwakening">RISVEGLIO DEL TESCHIO</p>
+<strong id="doomLabel">0 / 12</strong>
+</div>
+<div class="skull-mark">💀</div>
+</div>
+<div class="doom-track"><div class="doom-fill" id="doomFill"></div></div>
+<div class="bell-progress" data-i18n="bellChangeRoom" id="bellProgress">La campana suona a ogni cambio di stanza.</div>
+<div class="skull-phase-card sleeping" id="skullPhaseCard"><span id="skullPhaseIcon">💀</span><div><strong data-i18n="skullSleeping" id="skullPhaseTitle">Teschio dormiente</strong><small data-i18n="skullPrison" id="skullPhaseText">La Cripta è ancora il suo carcere.</small></div></div>
+</div>
+<div class="dice-rules-card">
+<p class="eyebrow" data-i18n="manorDie">IL DADO DEL MANIERO</p>
+<div class="dice-rules-grid">
+<span data-i18n="move1"><b>1</b> Avanza 1</span>
+<span data-i18n="move2"><b>2</b> Avanza 2</span>
+<span data-i18n="move3"><b>3</b> Avanza 3</span>
+<span data-i18n="move4"><b>4</b> Avanza 4</span>
+<span data-i18n="move5"><b>5</b> Avanza 5</span>
+<span data-i18n="randomEventTrap"><img alt="" class="die-omen-mini" src="assets/ui/die-omen.png"/> 👻 / ⚠️ casuale</span>
+</div>
+<p class="block-rule-note" data-i18n="blockRule">⛓️ Un blocco dura al massimo <strong>2 turni personali</strong>. Un Imprevisto favorevole può liberarti prima; al secondo turno il personaggio si libera comunque.</p>
+</div>
+</div>
+</section>
+<aside class="panel right-panel">
+<section>
+<div class="section-head"><h2 data-i18n="esotericCode">Codice esoterico</h2><span class="tiny-note" data-i18n="visionsSymbols">visioni e simboli</span></div>
+<p class="journal-help" data-i18n="journalHelp">Questi frammenti non servono direttamente a vincere: prima raccontano il mistero del maniero, poi spiegano il vero concetto storico o alchemico da cui prendono ispirazione.</p>
+<div class="journal" id="journal"></div>
+</section>
+<section class="log-section">
+<div class="section-head">
+<h2 data-i18n="latestEvents">Ultimi eventi</h2>
+<span class="tiny-note" data-i18n="nightChronicle">Cronaca della notte</span>
+</div>
+<div class="event-log" id="eventLog"></div>
+</section>
+</aside>
+</main>
+</div>
+<dialog class="room-dialog persistent-room-dialog" id="roomDialog">
+<div class="room-dialog-shell v112-room-shell">
+<button aria-label="Minimizza" class="room-window-minimize" id="roomMinimizeBtn" title="Minimizza">⌄</button>
+<div class="room-stage-column">
+<div class="room-visual-area v112-room-visual">
+<div class="room-canvas v112-room-canvas" id="roomCanvas">
+<img alt="Stanza del maniero" id="dialogRoomImage" src="assets/rooms/vestibolo.jpg"/>
+<div class="room-vignette"></div>
+<div class="footprints-layer" id="footprintsLayer"></div>
+<div class="characters-layer" id="charactersLayer"></div>
+<div class="room-flavor-box v112-flavor"><span id="dialogRoomFlavor">Il maniero osserva ogni passo.</span></div>
+<div aria-live="polite" class="room-inventory-reminder" hidden="" id="roomInventoryReminder" role="button" tabindex="0" title="">
+<span class="room-inventory-reminder-icon">🎒</span>
+<div><strong data-i18n="inventoryReminder">Hai oggetti nell’inventario.</strong><small data-i18n="inventoryReminderHint">Usali dal pannello a destra durante il tuo turno.</small></div>
+</div>
+</div>
+</div>
+</div>
+<aside class="room-side-panel">
+<div class="room-side-scroll" id="roomSideScroll">
+<section class="room-side-card room-heading-card">
+<p class="eyebrow" id="dialogRoomKicker">INGRESSO</p>
+<h2 id="dialogRoomName">Vestibolo</h2>
+<p class="room-side-hint" id="dialogRoomHint">Le porte si chiudono alle vostre spalle.</p>
+</section>
+<section class="room-side-card room-movement-card">
+<div class="room-movement-box v112-movement-box">
+<button aria-label="Tira il dado" class="manor-die" id="roomRollBtn">
+<span aria-hidden="true" class="dice-cube-stage" id="dialogDice">
+<span class="dice-cube" data-face="idle" id="diceCube">
+<span class="cube-face cube-front">1</span>
+<span class="cube-face cube-right">2</span>
+<span class="cube-face cube-left">3</span>
+<span class="cube-face cube-back">4</span>
+<span class="cube-face cube-top">5</span>
+<span class="cube-face cube-bottom cube-omen"><img alt="Imprevisto o Trappola" src="assets/ui/die-omen.png"/></span>
+</span>
+</span>
+<small>TIRA</small>
+</button>
+<div class="movement-copy">
+<span class="small-label">MOVIMENTO</span>
+<strong id="dialogMoveText">Tira il dado</strong>
+<span class="movement-status" id="dialogStatusText">Nessun impedimento</span>
+<span class="movement-rules" id="movementRules">1–5 = passi · ☠ = Imprevisto / Trappola</span>
+</div>
+</div>
+<div class="room-toolbar v112-room-toolbar">
+<button class="ghost" id="roomPathBtn">🗺️ Percorso</button>
+<button class="ghost" id="roomMusicBtn">🎵 ON</button>
+</div>
+<nav aria-label="Navigazione rapida pannello stanza" class="room-anchor-toolbar">
+<button class="ghost room-anchor-btn" id="roomRitualAnchorBtn" type="button">🪶 Oggetti del rito</button>
+<button class="ghost room-anchor-btn" id="roomInventoryAnchorBtn" type="button">🎒 Inventario</button>
+</nav>
+</section>
+<section class="room-side-card room-stats-card">
+<div class="section-head"><h3>Stato della partita</h3><span class="tiny-note">sempre visibile</span></div>
+<div class="room-side-stats">
+<div class="room-side-stat"><span>💀 Risveglio</span><strong id="roomDoomLabel">0 / 12</strong></div>
+<div class="room-side-stat"><span>🔔 Round</span><strong id="roomRoundLabel">1</strong></div>
+<div class="room-side-stat"><span>💀 Vita Teschio</span><strong id="roomSkullLifeLabel">3 / 3</strong></div>
+<div class="room-side-stat" id="roomStatusPanel"><span>⛓️ Stato</span><strong id="roomStatusLabel">Libero</strong></div>
+<div class="room-side-stat"><span>🎭 <span id="difficultyStatLabel">Difficoltà</span></span><strong id="roomDifficultyLabel">Difficile</strong></div>
+</div>
+<button class="primary room-side-seal-btn" hidden="" id="roomSealBtn">⚰️ Esegui il rito finale</button>
+</section>
+<section class="room-side-card">
+<div class="section-head"><h3>Esploratori</h3><span class="tiny-note">cuori e posizione</span></div>
+<div class="players-list room-players-list" id="roomPlayersList"></div>
+</section>
+<section class="room-side-card room-anchor-target" id="roomRitualSection">
+<div class="section-head"><h3>Oggetti del rito</h3><span class="tiny-note" data-i18n="ravenMoonThorn">Corvo · Luna · Spina</span></div>
+<div class="sigils room-side-sigils" id="roomSigils"></div>
+</section>
+<section class="room-side-card room-anchor-target" id="roomInventorySection">
+<div class="section-head"><h3>Inventario</h3><span class="tiny-note">usa 1 oggetto nel tuo turno</span></div>
+<div class="inventory active-inventory room-side-inventory" id="roomInventory"></div>
+</section>
+</div>
+</aside>
+</div>
+</dialog>
+<dialog class="path-dialog" id="pathDialog">
+<div class="path-dialog-shell">
+<header class="path-dialog-header">
+<div>
+<p class="eyebrow" data-i18n="pathEyebrow">PERCORSO DEL MANIERO</p>
+<h2 data-i18n="pathTitle">La strada verso la Cripta</h2>
+<p data-i18n="pathCopy">Qui controlli la posizione di tutti e, dopo il dodicesimo rintocco, quali stanze sono state infestate dal Teschio.</p>
+</div>
+<button aria-label="Chiudi" class="modal-close room-close" id="pathDialogClose">×</button>
+</header>
+<div class="path-dialog-content">
+<div class="path-room-strip" id="pathRoomStrip"></div>
+<div class="dialog-legend-mini path-legend">
+<span data-i18n="you"><b class="legend-dot human"></b>Tu</span>
+<span><b class="legend-dot bot1"></b>Elena</span>
+<span><b class="legend-dot bot2"></b>Bianchi</span>
+<span><b class="legend-dot bot3"></b>Marco</span>
+</div>
+<div aria-label="Percorso del maniero" class="board board-dialog" id="board"></div>
+</div>
+</div>
+</dialog>
+<dialog class="explore-dialog outcome-dialog" id="exploreDialog">
+<div class="explore-dialog-shell">
+<div class="explore-scene">
+<img alt="Stanza" id="exploreRoomImage" src="assets/rooms/vestibolo.jpg"/>
+<div class="explore-scene-shade"></div>
+<div class="explore-room-label">
+<span class="eyebrow" id="exploreRoomKicker">INGRESSO</span>
+<strong id="exploreRoomName">Vestibolo</strong>
+</div>
+</div>
+<div class="explore-outcome neutral" id="exploreOutcome">
+<div class="explore-icon" id="exploreIcon">🔎</div>
+<p class="eyebrow" data-i18n="exploration" id="outcomeKicker">ESPLORAZIONE</p>
+<h2 data-i18n="exploredRoom" id="exploreTitle">Hai esplorato la stanza</h2>
+<p data-i18n="manorSilent" id="exploreText">Il maniero tace.</p>
+<div class="explore-meta" id="exploreMeta"></div>
+<div class="explore-explanation" hidden="" id="exploreExplanation"></div>
+<button class="primary wide" data-i18n="continue" id="exploreContinueBtn">Continua</button>
+</div>
+</div>
+</dialog>
+<dialog class="esoteric-test-dialog" id="esotericTestDialog">
+<div class="esoteric-test-shell">
+<div class="test-occult-panel">
+<div class="test-rune-ring"><span id="testGlyph">🜍</span></div>
+<p class="eyebrow" id="testEyebrow">IMPREVISTO · TEST ESOTERICO</p>
+<h2 id="testTitleStatic">Il maniero pone una domanda</h2>
+<p id="testCopyStatic">Un sigillo si accende sul pavimento di <strong id="testRoomName">questa stanza</strong>. Per attraversarlo devi rispondere.</p>
+<div class="test-warning" id="testWarningStatic">Una risposta errata ti respinge alla prima casella della stanza.</div>
+</div>
+<div class="test-question-panel">
+<p class="eyebrow" data-i18n="codeVesper">CODICE VESPER</p>
+<h3 data-i18n="whichSymbol" id="testQuestion">Quale simbolo completa il sigillo?</h3>
+<div class="test-answers" id="testAnswers"></div>
+<div class="test-feedback" hidden="" id="testFeedback"></div>
+<button class="primary wide" hidden="" id="testContinueBtn" type="button">Continua</button>
+</div>
+</div>
+</dialog>
+<dialog class="modal profile-modal" id="profileDialog">
+<form id="profileForm">
+<p class="eyebrow" data-i18n="newGameEyebrow" id="profileEyebrow">NUOVA PARTITA</p>
+<h2 id="profileTitle">Chi entrerà nel maniero?</h2>
+<p class="modal-copy" id="profileCopy">Scegli nome e avatar. Questa scelta viene richiesta per ogni nuova partita.</p>
+<label class="field">
+<span id="profileNameLabel">Nome</span>
+<input data-i18n-placeholder="yourName" id="heroNameInput" maxlength="20" name="heroName" placeholder="Il tuo nome" required="" type="text"/>
+</label>
+<div class="gender-grid">
+<label class="avatar-choice">
+<input checked="" name="heroGender" type="radio" value="male"/>
+<img alt="Avatar uomo" src="assets/portraits/hero-male.jpg"/>
+<span id="maleAvatarLabel">Avventuriero</span>
+</label>
+<label class="avatar-choice">
+<input name="heroGender" type="radio" value="female"/>
+<img alt="Avatar donna" src="assets/portraits/hero-female.jpg"/>
+<span id="femaleAvatarLabel">Avventuriera</span>
+</label>
+</div>
+<button class="primary wide" id="profileSaveBtn" type="submit">Continua: scegli difficoltà</button>
+</form>
+</dialog>
+<dialog class="modal difficulty-dialog" id="difficultyDialog">
+<div>
+<p class="eyebrow" id="difficultyEyebrow">DIFFICOLTÀ</p>
+<h2 id="difficultyTitle">Quanti entreranno nel Maniero?</h2>
+<p id="difficultyCopy">La difficoltà determina quanti rivali competono con te e quante Trappole Cardinali sono attive: 1 in Facile, 2 in Medio, 3 in Difficile.</p>
+<div class="difficulty-grid">
+<button class="difficulty-choice" data-difficulty="easy" type="button"><strong id="difficultyEasyTitle">Facile</strong><span id="difficultyEasyText">Tu + Elena</span><div class="difficulty-portraits"><img alt="" src="assets/portraits/hero-male.jpg"/><img alt="" src="assets/portraits/elena.jpg"/></div></button>
+<button class="difficulty-choice" data-difficulty="medium" type="button"><strong id="difficultyMediumTitle">Medio</strong><span id="difficultyMediumText">Tu + Elena + Prof. Bianchi</span><div class="difficulty-portraits"><img alt="" src="assets/portraits/hero-male.jpg"/><img alt="" src="assets/portraits/elena.jpg"/><img alt="" src="assets/portraits/bianchi.jpg"/></div></button>
+<button class="difficulty-choice danger-choice" data-difficulty="hard" type="button"><strong id="difficultyHardTitle">Difficile</strong><span id="difficultyHardText">Tutti i personaggi</span><div class="difficulty-portraits"><img alt="" src="assets/portraits/hero-male.jpg"/><img alt="" src="assets/portraits/elena.jpg"/><img alt="" src="assets/portraits/bianchi.jpg"/><img alt="" src="assets/portraits/marco.jpg"/></div></button>
+</div>
+</div>
+</dialog>
+<dialog class="modal item-dialog" id="itemDialog">
+<div>
+<button aria-label="Chiudi" class="modal-close" id="itemDialogClose" type="button">×</button>
+<p class="eyebrow" data-i18n="inventoryItem">OGGETTO DELL’INVENTARIO</p>
+<div class="item-use-head">
+<div class="item-use-icon" id="itemUseIcon">🕯️</div>
+<div><h2 data-i18n="object" id="itemUseTitle">Oggetto</h2><p data-i18n="description" id="itemUseDescription">Descrizione</p></div>
+</div>
+<div class="item-use-effect" id="itemUseEffect"></div>
+<div class="item-target-area" id="itemTargetArea"></div>
+<button class="primary wide" data-i18n="useObject" id="itemUseConfirm" type="button">Usa oggetto</button>
+</div>
+</dialog>
+<dialog class="modal" id="storyDialog">
+<div>
+<button aria-label="Chiudi" class="modal-close" id="storyCloseBtn" type="button">×</button>
+<p class="eyebrow" data-i18n="prologue">PROLOGO</p>
+<h2 id="storyTitle">La notte delle dodici campane</h2>
+<p id="storyP1">Nel 1888 il conte Aureliano Vesper fece murare sotto il suo maniero una bara di pietra. Dentro non riposava un uomo, ma un Teschio capace di chiamare a sé le ombre della casa.</p>
+<p id="storyP2">Ogni cento anni, durante la notte delle dodici campane, i tre Sigilli che tengono chiusa la bara si disperdono nelle stanze. Questa notte è l’ultima prima del risveglio.</p>
+<p id="storyP3">Il dado del maniero mostra <strong>1–5</strong> e un <strong>simbolo inquietante</strong>: con 1–5 avanzi del numero indicato; quando compare il simbolo, il maniero decide casualmente tra <strong>Imprevisto</strong> e <strong>Trappola</strong>. Se resti bloccato, il blocco dura al massimo due tuoi turni.</p>
+<div class="story-rule" id="storyRule"><strong>Il dodicesimo rintocco non conclude la partita:</strong> il Teschio si libera, si trasforma e comincia a infestare le stanze. Da quel momento dovrai sopravvivere alla sua presenza e completare il rito nella Cripta.</div>
+<button class="primary wide" id="storyContinueBtn" type="button">Continua: scegli il protagonista</button>
+</div>
+</dialog>
+<dialog class="modal seal-modal" id="sealDialog">
+<div>
+<button aria-label="Chiudi" class="modal-close" id="sealClose">×</button>
+<p class="eyebrow" data-i18n="finalRite">RITO FINALE</p>
+<h2 data-i18n="coffinTrembles">Il coperchio della bara trema</h2>
+<p data-i18n="riteCopy">La formula è incisa direttamente sul bordo della bara: <strong>Corvo → Luna → Spina</strong>. Gli indizi raccolti nel maniero sono frammenti esoterici e non sono necessari al rito.</p>
+<div class="seal-skull-life"><span data-i18n="skullLifeUpper">VITA DEL TESCHIO</span><strong id="sealSkullLife">3 / 3</strong><div class="skull-life-track"><div class="skull-life-fill" id="sealSkullLifeFill"></div></div></div>
+<div class="seal-sequence" id="sealSequence"></div>
+<div class="seal-buttons">
+<button data-seal="raven" id="sealButton-raven">🪶 Corvo</button>
+<button data-seal="moon" id="sealButton-moon">🌙 Luna</button>
+<button data-seal="thorn" id="sealButton-thorn">🌿 Spina</button>
+</div>
+<button class="ghost wide" data-i18n="clearSequence" id="resetSequence">Cancella sequenza</button>
+</div>
+</dialog>
+<dialog class="awakening-dialog cinematic-awakening" id="awakeningDialog">
+<div class="awakening-stage" id="awakeningStage">
+<img alt="La Cripta al dodicesimo rintocco" class="awakening-bg" src="assets/rooms/cripta.jpg"/>
+<div class="awakening-blackout"></div>
+<div class="awakening-pulse"></div>
+<div class="awakening-fog fog-a"></div>
+<div class="awakening-fog fog-b"></div>
+<div class="awakening-crack crack-a"></div>
+<div class="awakening-crack crack-b"></div>
+<div class="awakening-bell-mark" id="awakeningBell">XII</div>
+<div class="awakening-caption" data-i18n="twelfthToll" id="awakeningCaption">IL DODICESIMO RINTOCCO</div>
+<div aria-hidden="true" class="awakening-entity">
+<div class="awakening-aura"></div>
+<div class="awakening-skull-core">💀</div>
+<div class="awakening-shadow shadow-one"></div>
+<div class="awakening-shadow shadow-two"></div>
+<div class="awakening-shadow shadow-three"></div>
+</div>
+<div class="awakening-scream" data-i18n="notTheEnd">NON È LA FINE.</div>
+<div aria-hidden="true" class="awakening-final" id="awakeningFinal">
+<p class="eyebrow" data-i18n="manorChanged">IL MANIERO È CAMBIATO</p>
+<h2 data-i18n="skullFree">Il Teschio è libero</h2>
+<p data-i18n="awakeningCopy">La bara si spalanca. L’osso si solleva, le ombre gli costruiscono un corpo e la Cripta smette di contenerlo. Ora può attraversare il maniero e lasciare stanze infestate dietro di sé.</p>
+<div class="awakening-rules">
+<div><b data-i18n="infestation">👻 Infestazione</b><span data-i18n="infestationCopy">Ogni stanza attraversata dal Teschio resta contaminata.</span></div>
+<div><b data-i18n="encounter">💀 Incontro</b><span data-i18n="encounterCopy">Se vi raggiunge può provocare paura, ferite, blocchi o trascinarvi indietro.</span></div>
+<div><b data-i18n="victory">⚰️ Vittoria</b><span data-i18n="victoryCopy">Raccogli i tre Sigilli, raggiungi la Cripta e compi il rito: il Teschio perderà la sua forma e tornerà un osso comune.</span></div>
+</div>
+<button class="primary wide" data-i18n="continueHaunted" disabled="" id="awakeningContinueBtn">Continua nel maniero infestato</button>
+</div>
+</div>
+</dialog>
+<dialog class="modal position-dialog" id="positionDialog">
+<div>
+<button aria-label="Chiudi" class="modal-close" id="positionDialogClose">×</button>
+<p class="eyebrow" data-i18n="positionDetail">DETTAGLIO POSIZIONE</p>
+<h2 data-i18n="tile" id="positionDialogTitle">Casella</h2>
+<p class="position-dialog-meta" id="positionDialogMeta"></p>
+<div class="position-occupants" id="positionDialogOccupants"></div>
+</div>
+</dialog>
+<dialog class="modal result-modal" id="resultDialog">
+<div class="result-shell">
+<div aria-hidden="true" class="victory-particles" id="victoryParticles"></div>
+<p class="eyebrow" id="resultEyebrow"></p>
+<div class="winner-hero">
+<img alt="Vincitore" class="winner-avatar" id="winnerAvatar" src="assets/portraits/hero-male.jpg"/>
+<div>
+<h2 id="resultTitle"></h2>
+<p id="resultText"></p>
+</div>
+</div>
+<img alt="Cripta" class="result-scene" id="resultImage" src="assets/rooms/cripta.jpg"/>
+<section class="final-ranking-section">
+<div class="section-head"><h3 data-i18n="finalRanking">Classifica finale</h3><span class="tiny-note" data-i18n="rankingNote">posizione al termine della partita</span></div>
+<div class="result-ranking" id="resultRanking"></div>
+</section>
+<button class="primary wide" data-i18n="playAgain" id="playAgainBtn">Gioca ancora</button>
+</div>
+</dialog>
+<script src="content-i18n.js"></script><script src="game.js"></script>
+</body>
+</html>
